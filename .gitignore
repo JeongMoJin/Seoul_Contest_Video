@@ -1,0 +1,7 @@
+node_modules/
+out/
+public/raw-demo.webm
+public/raw-demo.mp4
+public/bgm.mp3
+*.log
+.DS_Store

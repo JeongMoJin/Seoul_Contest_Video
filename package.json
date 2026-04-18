@@ -1,0 +1,28 @@
+{
+  "name": "seoul-i-video",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Playwright 녹화 + Remotion 합성 시연영상 파이프라인",
+  "scripts": {
+    "record": "tsx recorder/record.ts",
+    "start": "remotion studio",
+    "render": "remotion render SeoulIVideo out/seoul-i-final.mp4 --codec=h264 --crf=18 --pixel-format=yuv420p",
+    "convert": "ffmpeg -y -i public/raw-demo.webm -c:v libx264 -pix_fmt yuv420p -crf 18 public/raw-demo.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.316",
+    "@remotion/google-fonts": "^4.0.316",
+    "@remotion/media-utils": "^4.0.316",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "remotion": "^4.0.316"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "playwright": "^1.49.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.6.3"
+  }
+}
