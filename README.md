@@ -1,16 +1,19 @@
 # seoul-i-video
 
 > 2026 서울시 빅데이터 활용 경진대회 시연영상 파이프라인
-> Playwright로 배포된 서울이 사이트를 자동 녹화 → Remotion으로 인트로/자막/아웃트로/BGM 합성.
+> Playwright 로 배포된 서울이 사이트를 자동 녹화 → Remotion 으로 인트로/자막/아웃트로/BGM 합성.
 
 ## 파이프라인
 
 ```
-[Playwright]  seoul-i.vercel.app 자동 조작 녹화
-              └→ public/raw-demo.webm (또는 mp4)
+[Playwright CDP]  seoul-i.vercel.app 자동 조작 녹화 (JPEG 스트림)
+                  └→ public/raw-demo.mp4 (1.95 Mbps · libx264 CRF 14)
 
-[Remotion]    Intro(15s) + Demo(180s, raw + 자막) + Outro(20s) + BGM
-              └→ out/seoul-i-final.mp4 (1920×1080 30fps H.264)
+[Remotion]        Intro(8s) + Demo(68s, raw + 자막) + Outro(44s) + BGM
+                  └→ out/seoul-i-raw.mp4 (1920×1080 30fps H.264)
+
+[ffmpeg CBR]      x264 CBR 30 Mbps 강제 재인코딩
+                  └→ out/seoul-i-final.mp4 (434 MB · 120.04s)
 ```
 
 ## 선결 조건
@@ -21,30 +24,29 @@
 
 ## 실행
 
-### 1. 녹화
+### 1. 녹화 (CDP screencast · 고품질 권장)
 ```bash
-# 기본 (seoul-i.vercel.app)
+npm run record:cdp            # Page.startScreencast → libx264 CRF 14 → raw-demo.mp4
+# 구버전 (Playwright recordVideo · VP8 920kbps):
 npm run record
-
-# 다른 URL이면
-SEOUL_I_URL=https://my-preview.vercel.app npm run record
 ```
-산출물: `public/raw-demo.webm` (+ ffmpeg 있으면 `raw-demo.mp4` 동시 생성)
+산출물: `public/raw-demo.mp4` (~16 MB · 1.95 Mbps · 1920×1080)
 
-### 2. Remotion Studio에서 타이밍 확인
+### 2. Remotion Studio 에서 타이밍 확인
 ```bash
 npm start
-# → http://localhost:3000 (Remotion Studio)
 ```
-- 좌측 Composition list에서 `SeoulIVideo` 선택
-- Timeline에서 Demo 씬 자막 타이밍이 raw 영상과 싱크 맞는지 확인
-- `src/scenes/Demo.tsx`의 `captions` 배열 수정 후 즉시 반영
+- 좌측 Composition list 에서 `SeoulIVideo` 선택
+- Timeline 에서 Demo 씬 자막 타이밍이 raw 영상과 싱크 맞는지 확인
+- `src/scenes/Demo.tsx` 의 `captions` 배열 수정 후 즉시 반영
 
-### 3. 최종 렌더링
+### 3. 최종 렌더링 (CRF 14 렌더 → CBR 30 Mbps transcode)
 ```bash
-npm run render
+npm run render                # remotion render → out/seoul-i-final.mp4
+mv out/seoul-i-final.mp4 out/seoul-i-raw.mp4
+npx tsx scripts/transcode-30m.ts  # → out/seoul-i-final.mp4 (30.29 Mbps)
 ```
-산출물: `out/seoul-i-final.mp4`
+산출물: `out/seoul-i-final.mp4` (434 MB · 120.04s · 30.29 Mbps)
 
 ## BGM
 
@@ -68,17 +70,19 @@ Playwright 녹화는 OS 커서가 찍히지 않음. `recorder/record.ts`에서 V
 | 시나리오 (클릭·스크럽 순서) | `recorder/scenarios.ts` |
 | 자막 타이밍·문구 | `src/scenes/Demo.tsx` `captions` 배열 |
 | 인트로 문구/시간 | `src/scenes/Intro.tsx` |
-| 아웃트로 URL/크레딧 | `src/scenes/Outro.tsx` |
+| 아웃트로 URL/QR/크레딧 | `src/scenes/Outro.tsx` |
+| QR 컴포넌트 | `src/components/QRCode.tsx` (qrcode-generator 기반 인라인 SVG) |
 | 전체 총 길이 | `src/SeoulIVideo.tsx` `INTRO_SEC/DEMO_SEC/OUTRO_SEC` |
 | 1080p/4K 해상도 | `src/SeoulIVideo.tsx` `WIDTH/HEIGHT` |
+| 최종 비트레이트 | `scripts/transcode-30m.ts` (-b:v 30M → 원하는 값) |
 
-## 체크포인트
+## 현재 상태
 
-1. **URL 확정** — `SEOUL_I_URL` 환경변수 or default (`seoul-i.vercel.app`)
-2. **BGM** — `public/bgm.mp3` 드롭 + `HAS_BGM=true` or skip
-3. **녹화 검수** — `public/raw-demo.mp4` 플레이백, 커서·스크럽·로딩 지연 점검
-4. **자막 싱크** — Remotion Studio에서 timeline 맞춰 captions 타이밍 실측 재조정
-5. **최종 렌더링** — `npm run render`, 완료 후 YouTube "일부 공개(Unlisted)"로 업로드
+- 총 길이: 120.04s (INTRO 8 + DEMO 68 + OUTRO 44)
+- 해상도: 1920×1080 30fps
+- 코덱: H.264 (CBR 30 Mbps) + AAC 320kbps
+- BGM: universfield "Cinematic Documentary Background" (Pixabay License)
+- Outro QR: `https://seoul-i.vercel.app` (스캔 가능)
 
 ## 트러블슈팅
 
