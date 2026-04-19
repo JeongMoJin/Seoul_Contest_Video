@@ -5,6 +5,7 @@
   "description": "Playwright 녹화 + Remotion 합성 시연영상 파이프라인",
   "scripts": {
     "record": "tsx recorder/record.ts",
+    "record:cdp": "tsx recorder/record-cdp.ts",
     "start": "remotion studio",
     "render": "remotion render SeoulIVideo out/seoul-i-final.mp4",
     "convert": "ffmpeg -y -i public/raw-demo.webm -c:v libx264 -pix_fmt yuv420p -crf 18 public/raw-demo.mp4"
@@ -13,6 +14,7 @@
     "@remotion/cli": "^4.0.316",
     "@remotion/google-fonts": "^4.0.316",
     "@remotion/media-utils": "^4.0.316",
+    "qrcode-generator": "^2.0.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "remotion": "^4.0.316"

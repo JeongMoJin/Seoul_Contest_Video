@@ -3,15 +3,16 @@ import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig, Seq
 import { loadFont as loadGaegu } from '@remotion/google-fonts/Gaegu';
 import { loadFont as loadNoto } from '@remotion/google-fonts/NotoSansKR';
 import { loadFont as loadMono } from '@remotion/google-fonts/JetBrainsMono';
+import { QRCode } from '../components/QRCode';
 
 const gaegu = loadGaegu();
 const noto = loadNoto();
 const mono = loadMono();
 
-// 아웃트로 48초 구성:
-//   0 ~ 10s   Phase A : face pulse + "서울이도 하루를 살아" + 의인화 부제
-//   10 ~ 24s  Phase B : 대형 URL + 부연
-//   24 ~ 48s  Phase C : 대회·폰트·데이터·BGM 크레딧 (24초 체류)
+// 아웃트로 44초 구성:
+//   0 ~ 9s    Phase A : face pulse + "서울이도 하루를 살아" + 의인화 부제
+//   9 ~ 23s   Phase B : 대형 URL + QR + 부연
+//   23 ~ 44s  Phase C : 대회·폰트·데이터·BGM 크레딧
 export const Outro: React.FC = () => {
   const { fps } = useVideoConfig();
   return (
@@ -21,15 +22,15 @@ export const Outro: React.FC = () => {
       }}
     >
       <GlobalFade>
-        <Sequence from={0} durationInFrames={fps * 10}>
+        <Sequence from={0} durationInFrames={fps * 9}>
           <PhaseA />
         </Sequence>
 
-        <Sequence from={fps * 10} durationInFrames={fps * 14}>
+        <Sequence from={fps * 9} durationInFrames={fps * 14}>
           <PhaseB />
         </Sequence>
 
-        <Sequence from={fps * 24} durationInFrames={fps * 24}>
+        <Sequence from={fps * 23} durationInFrames={fps * 21}>
           <PhaseC />
         </Sequence>
       </GlobalFade>
@@ -131,7 +132,11 @@ const PhaseB: React.FC = () => {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
-  const subIn = interpolate(frame, [fps * 1.2, fps * 1.8], [0, 1], {
+  const qrIn = interpolate(frame, [fps * 1.0, fps * 1.7], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+  const subIn = interpolate(frame, [fps * 1.5, fps * 2.1], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
@@ -147,47 +152,100 @@ const PhaseB: React.FC = () => {
       style={{
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 20,
         opacity: localFade,
       }}
     >
       <div
         style={{
-          fontFamily: gaegu.fontFamily,
-          fontSize: 36,
-          color: '#7A6550',
-          opacity: urlIn,
-          letterSpacing: 2,
-          marginBottom: 16,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 64,
         }}
       >
-        지금 만나보세요
-      </div>
-      <div
-        style={{
-          fontFamily: mono.fontFamily,
-          fontSize: 110,
-          color: '#E8704A',
-          fontWeight: 800,
-          letterSpacing: -2,
-          opacity: urlIn,
-          transform: `translateY(${(1 - urlIn) * 22}px)`,
-          textShadow: '0 6px 28px rgba(232, 112, 74, 0.25)',
-        }}
-      >
-        seoul-i.vercel.app
-      </div>
-      <div
-        style={{
-          fontFamily: noto.fontFamily,
-          fontSize: 30,
-          color: '#3A2A1A',
-          opacity: subIn,
-          marginTop: 24,
-          letterSpacing: 1,
-        }}
-      >
-        원형 시계 · 25 자치구 친구들 · 건강검진표 PDF
+        {/* 좌측: 텍스트 스택 */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+          <div
+            style={{
+              fontFamily: gaegu.fontFamily,
+              fontSize: 36,
+              color: '#7A6550',
+              opacity: urlIn,
+              letterSpacing: 2,
+              marginBottom: 12,
+            }}
+          >
+            지금 만나보세요
+          </div>
+          <div
+            style={{
+              fontFamily: mono.fontFamily,
+              fontSize: 92,
+              color: '#E8704A',
+              fontWeight: 800,
+              letterSpacing: -2,
+              opacity: urlIn,
+              transform: `translateY(${(1 - urlIn) * 22}px)`,
+              textShadow: '0 6px 28px rgba(232, 112, 74, 0.25)',
+              lineHeight: 1,
+            }}
+          >
+            seoul-i.vercel.app
+          </div>
+          <div
+            style={{
+              fontFamily: noto.fontFamily,
+              fontSize: 26,
+              color: '#3A2A1A',
+              opacity: subIn,
+              marginTop: 20,
+              letterSpacing: 1,
+            }}
+          >
+            원형 시계 · 25 자치구 친구들 · 건강검진표 PDF
+          </div>
+        </div>
+
+        {/* 우측: QR 카드 */}
+        <div
+          style={{
+            opacity: qrIn,
+            transform: `scale(${0.9 + qrIn * 0.1})`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 14,
+            padding: 28,
+            background: '#FFFFFF',
+            borderRadius: 20,
+            boxShadow: '0 10px 40px rgba(90, 60, 30, 0.12)',
+            border: '1px solid #EFE4D1',
+          }}
+        >
+          <div
+            style={{
+              fontFamily: mono.fontFamily,
+              fontSize: 18,
+              color: '#B4A189',
+              letterSpacing: 6,
+              fontWeight: 700,
+            }}
+          >
+            SCAN
+          </div>
+          <QRCode value="https://seoul-i.vercel.app" size={280} color="#1A1A1A" />
+          <div
+            style={{
+              fontFamily: mono.fontFamily,
+              fontSize: 16,
+              color: '#E8704A',
+              letterSpacing: 1,
+              fontWeight: 700,
+            }}
+          >
+            seoul-i.vercel.app
+          </div>
+        </div>
       </div>
     </AbsoluteFill>
   );
