@@ -8,10 +8,10 @@ const gaegu = loadGaegu();
 const noto = loadNoto();
 const mono = loadMono();
 
-// 아웃트로 32초 구성 (DEMO_SEC 변경에 따라 OUTRO_SEC 이 조정되어도 각 Phase 는 비율이 아닌 절대 시간 기준)
-//   0 ~ 8s    Phase A : face pulse + "서울이도 하루를 살아"
-//   8 ~ 18s   Phase B : 대형 URL + 부연
-//   18 ~ 끝   Phase C : 대회·폰트·데이터 출처 크레딧
+// 아웃트로 48초 구성:
+//   0 ~ 10s   Phase A : face pulse + "서울이도 하루를 살아" + 의인화 부제
+//   10 ~ 24s  Phase B : 대형 URL + 부연
+//   24 ~ 48s  Phase C : 대회·폰트·데이터·BGM 크레딧 (24초 체류)
 export const Outro: React.FC = () => {
   const { fps } = useVideoConfig();
   return (
@@ -21,15 +21,15 @@ export const Outro: React.FC = () => {
       }}
     >
       <GlobalFade>
-        <Sequence from={0} durationInFrames={fps * 8}>
+        <Sequence from={0} durationInFrames={fps * 10}>
           <PhaseA />
         </Sequence>
 
-        <Sequence from={fps * 8} durationInFrames={fps * 10}>
+        <Sequence from={fps * 10} durationInFrames={fps * 14}>
           <PhaseB />
         </Sequence>
 
-        <Sequence from={fps * 18} durationInFrames={fps * 14}>
+        <Sequence from={fps * 24} durationInFrames={fps * 24}>
           <PhaseC />
         </Sequence>
       </GlobalFade>
@@ -77,12 +77,17 @@ const PhaseA: React.FC = () => {
     { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
   );
 
+  const subIn = interpolate(frame, [fps * 2.0, fps * 2.6], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+
   return (
     <AbsoluteFill
       style={{
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 24,
+        gap: 20,
         opacity: localFade,
       }}
     >
@@ -101,6 +106,19 @@ const PhaseA: React.FC = () => {
         }}
       >
         서울이도 하루를 살아
+      </div>
+      <div
+        style={{
+          fontFamily: noto.fontFamily,
+          fontSize: 32,
+          color: '#7A6550',
+          opacity: subIn,
+          transform: `translateY(${(1 - subIn) * 14}px)`,
+          letterSpacing: 1.5,
+          marginTop: 8,
+        }}
+      >
+        도시가 아닌 한 사람으로
       </div>
     </AbsoluteFill>
   );

@@ -48,10 +48,19 @@ async function main() {
 
   console.log(`▶  target: ${TARGET_URL}`);
   const browser = await chromium.launch({
-    headless: true, // 녹화는 headless로 (CI/백그라운드 가능)
+    headless: true,
     args: ['--window-size=1920,1080'],
   });
 
+  // 1단계: 워밍업 (별도 컨텍스트, 녹화 없음) — Vercel cold start / CDN 캐시 준비
+  console.log('◦  warm-up (not recorded)...');
+  const warm = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
+  const warmPage = await warm.newPage();
+  await warmPage.goto(TARGET_URL, { waitUntil: 'networkidle', timeout: 60000 });
+  await warmPage.goto(`${TARGET_URL}/checkup`, { waitUntil: 'networkidle', timeout: 30000 });
+  await warm.close();
+
+  // 2단계: 녹화 컨텍스트 — 여기부터 scenario-relative 시간이 영상 시간과 일치.
   const context = await browser.newContext({
     viewport: { width: 1920, height: 1080 },
     deviceScaleFactor: 1,
@@ -60,26 +69,26 @@ async function main() {
       size: { width: 1920, height: 1080 },
     },
   });
-
   await context.addInitScript(CURSOR_SCRIPT);
 
   const page = await context.newPage();
-
-  // 워밍업 (Vercel cold start 대응)
-  console.log('◦  warm-up load...');
-  await page.goto(TARGET_URL, { waitUntil: 'networkidle', timeout: 60000 });
-  await page.waitForTimeout(1500);
-  // 실제 녹화 시작점으로 다시 이동 (캐시된 뒤 로드라 깔끔)
-  await page.goto(TARGET_URL, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(800);
+  // 첫 프레임부터 메인 화면이 보이도록 goto 완료 후 즉시 시나리오 시작.
+  // domcontentloaded 로 빠르게 이동 (캐시 hit 덕분에 networkidle 도 짧지만 더 빠름).
+  await page.goto(TARGET_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  // 한 프레임 정도만 대기 (clock 초기 그려지는 시간)
+  await page.waitForTimeout(300);
 
   console.log(`●  recording ${scenario.length} actions`);
+  const t0 = Date.now();
   let idx = 0;
   for (const action of scenario) {
     idx += 1;
-    console.log(`    [${idx}/${scenario.length}] ${action.type}`);
+    const t = ((Date.now() - t0) / 1000).toFixed(2);
+    console.log(`    [${idx}/${scenario.length}] t=${t}s  ${action.type}`);
     await executeAction(page, action);
   }
+  const tEnd = ((Date.now() - t0) / 1000).toFixed(2);
+  console.log(`⏱  scenario took ${tEnd}s`);
 
   const video = page.video();
   await page.close();

@@ -6,7 +6,7 @@
   "scripts": {
     "record": "tsx recorder/record.ts",
     "start": "remotion studio",
-    "render": "remotion render SeoulIVideo out/seoul-i-final.mp4 --codec=h264 --crf=18 --pixel-format=yuv420p",
+    "render": "remotion render SeoulIVideo out/seoul-i-final.mp4 --codec=h264 --video-bitrate=10M --audio-bitrate=320k --pixel-format=yuv420p",
     "convert": "ffmpeg -y -i public/raw-demo.webm -c:v libx264 -pix_fmt yuv420p -crf 18 public/raw-demo.mp4"
   },
   "dependencies": {
