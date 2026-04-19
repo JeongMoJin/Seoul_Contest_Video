@@ -235,6 +235,8 @@ const PhaseC: React.FC = () => {
         Fonts · Pretendard (OFL) · Gaegu (OFL) · JetBrains Mono (OFL)
         <br />
         Data · 서울교통공사 지하철 · 서울 생활인구 · 기상청 ASOS
+        <br />
+        BGM · Cinematic Documentary Background by universfield (Pixabay License)
       </div>
     </AbsoluteFill>
   );

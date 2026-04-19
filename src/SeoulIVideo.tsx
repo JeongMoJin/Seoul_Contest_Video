@@ -19,8 +19,8 @@ export const DEMO_FRAMES = DEMO_SEC * FPS;
 export const OUTRO_FRAMES = OUTRO_SEC * FPS;
 export const TOTAL_FRAMES = INTRO_FRAMES + DEMO_FRAMES + OUTRO_FRAMES;
 
-// BGM 파일이 없으면 런타임 에러가 나지 않도록 optional 처리
-const HAS_BGM = false; // public/bgm.mp3 드롭 후 true로 바꾸기
+// BGM: public/bgm.mp3 (universfield · Cinematic Documentary Background · Pixabay License)
+const HAS_BGM = true;
 
 export const SeoulIVideo: React.FC = () => {
   return (
