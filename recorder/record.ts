@@ -173,26 +173,25 @@ async function executeAction(page: Page, action: Action): Promise<void> {
     }
 
     case 'scroll':
-      await page.evaluate(
-        ({ to, duration }) => {
-          return new Promise<void>((resolve) => {
-            const start = window.scrollY;
-            const delta = to - start;
-            const startTime = performance.now();
-            const easeInOut = (t: number) =>
-              t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-            const step = (now: number) => {
-              const elapsed = now - startTime;
-              const t = Math.min(elapsed / duration, 1);
-              window.scrollTo(0, start + delta * easeInOut(t));
+      // 문자열 기반 evaluate — tsx 가 주입하는 __name 헬퍼 미존재 우회.
+      await page.evaluate(`
+        (function(to, duration) {
+          return new Promise(function(resolve) {
+            var start = window.scrollY;
+            var delta = to - start;
+            var startTime = performance.now();
+            function step(now) {
+              var elapsed = now - startTime;
+              var t = Math.min(elapsed / duration, 1);
+              var e = t < 0.5 ? 2*t*t : -1 + (4-2*t)*t;
+              window.scrollTo(0, start + delta * e);
               if (t < 1) requestAnimationFrame(step);
               else resolve();
-            };
+            }
             requestAnimationFrame(step);
           });
-        },
-        { to: action.to, duration: action.duration },
-      );
+        })(${action.to}, ${action.duration})
+      `);
       return;
   }
 }

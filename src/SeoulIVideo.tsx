@@ -8,10 +8,11 @@ export const FPS = 30;
 export const WIDTH = 1920;
 export const HEIGHT = 1080;
 
-// 각 씬 길이 (초)
-export const INTRO_SEC = 15;
-export const DEMO_SEC = 180;
-export const OUTRO_SEC = 20;
+// 총 120초 타겟 (인트로 8 + 데모 69 + 아웃트로 43).
+// raw-demo.webm 실측 68.68s → DEMO_SEC=69 (ceil) · OUTRO 는 남은 시간 흡수.
+export const INTRO_SEC = 8;
+export const DEMO_SEC = 69;
+export const OUTRO_SEC = 43;
 
 export const INTRO_FRAMES = INTRO_SEC * FPS;
 export const DEMO_FRAMES = DEMO_SEC * FPS;

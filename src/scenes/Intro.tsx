@@ -6,27 +6,25 @@ import { loadFont as loadNoto } from '@remotion/google-fonts/NotoSansKR';
 const gaegu = loadGaegu();
 const noto = loadNoto();
 
-// 15초 인트로 구성:
-//   0-3s:  검은 배경 + "서울에는 매일 940만 명의 하루가 오간다"
-//   3-6s:  "하지만 우리는 서울을 '도시'로만 봤다"
-//   6-10s: 크림 배경으로 전환 + "서울이" 로고 spring
-//   10-15s: "도시가 아닌 한 사람" 서브타이틀 + face 펄스
-
+// 8초 인트로 구성:
+//   0 ~ 2.5s : 검정 배경 + "서울에는 매일 940만의 하루가"
+//   2.5 ~ 5s : 검정 배경 + "우리는 '도시'로만 봤다"
+//   5 ~ 8s   : 크림 배경 전환 + 서울이 얼굴 spring + 타이틀 + 서브타이틀
 export const Intro: React.FC = () => {
   const { fps } = useVideoConfig();
   return (
     <AbsoluteFill>
       <BgTransition />
 
-      <Sequence from={0} durationInFrames={fps * 3}>
-        <Line text="서울에는 매일 940만 명의 하루가 오간다" color="#FAF7F2" bg="#0b0a08" />
+      <Sequence from={0} durationInFrames={Math.round(fps * 2.5)}>
+        <Line text="서울에는 매일 940만의 하루가" color="#FAF7F2" bg="transparent" />
       </Sequence>
 
-      <Sequence from={fps * 3} durationInFrames={fps * 3}>
-        <Line text="하지만 우리는 서울을 '도시'로만 봤다" color="#FAF7F2" bg="#0b0a08" />
+      <Sequence from={Math.round(fps * 2.5)} durationInFrames={Math.round(fps * 2.5)}>
+        <Line text="우리는 '도시'로만 봤다" color="#FAF7F2" bg="transparent" />
       </Sequence>
 
-      <Sequence from={fps * 6} durationInFrames={fps * 9}>
+      <Sequence from={fps * 5} durationInFrames={fps * 3}>
         <LogoReveal />
       </Sequence>
     </AbsoluteFill>
@@ -36,11 +34,10 @@ export const Intro: React.FC = () => {
 const BgTransition: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const t = interpolate(frame, [fps * 5.5, fps * 7], [0, 1], {
+  const t = interpolate(frame, [fps * 4.6, fps * 5.2], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
-  // 검정 → 크림
   const bg = `rgb(${lerp(11, 246, t)}, ${lerp(10, 239, t)}, ${lerp(8, 228, t)})`;
   return <AbsoluteFill style={{ background: bg }} />;
 };
@@ -50,7 +47,7 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const Line: React.FC<{ text: string; color: string; bg: string }> = ({ text, color, bg }) => {
   const frame = useCurrentFrame();
   const { durationInFrames, fps } = useVideoConfig();
-  const inDur = Math.round(fps * 0.4);
+  const inDur = Math.round(fps * 0.35);
   const outStart = durationInFrames - inDur;
   const opacity = interpolate(
     frame,
@@ -58,7 +55,7 @@ const Line: React.FC<{ text: string; color: string; bg: string }> = ({ text, col
     [0, 1, 1, 0],
     { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
   );
-  const y = interpolate(frame, [0, inDur], [16, 0], {
+  const y = interpolate(frame, [0, inDur], [14, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
@@ -73,9 +70,9 @@ const Line: React.FC<{ text: string; color: string; bg: string }> = ({ text, col
     >
       <div
         style={{
-          fontFamily: noto.fontFamily,
-          fontWeight: 500,
-          fontSize: 58,
+          fontFamily: gaegu.fontFamily,
+          fontWeight: 700,
+          fontSize: 72,
           color,
           opacity,
           transform: `translateY(${y}px)`,
@@ -97,23 +94,22 @@ const LogoReveal: React.FC = () => {
   const springProg = spring({
     frame,
     fps,
-    config: { damping: 12, stiffness: 110, mass: 0.9 },
+    config: { damping: 12, stiffness: 120, mass: 0.9 },
   });
 
-  const scale = interpolate(springProg, [0, 1], [0.6, 1]);
-  const opacity = interpolate(frame, [0, fps * 0.6], [0, 1], {
+  const scale = interpolate(springProg, [0, 1], [0.55, 1]);
+  const opacity = interpolate(frame, [0, fps * 0.5], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
-  // 얼굴 호흡 (10-15s 구간의 5초에 걸쳐 1.5회 pulse)
-  const pulse = Math.sin((frame / fps) * Math.PI * 1.2) * 0.015 + 1;
+  const pulse = Math.sin((frame / fps) * Math.PI * 1.6) * 0.02 + 1;
 
-  const subIn = interpolate(frame, [fps * 2, fps * 2.6], [0, 1], {
+  const subIn = interpolate(frame, [fps * 1.4, fps * 2.0], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
-  const subY = interpolate(frame, [fps * 2, fps * 2.6], [18, 0], {
+  const subY = interpolate(frame, [fps * 1.4, fps * 2.0], [18, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
@@ -123,15 +119,10 @@ const LogoReveal: React.FC = () => {
       style={{
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 24,
+        gap: 20,
       }}
     >
-      <div
-        style={{
-          transform: `scale(${scale * pulse})`,
-          opacity,
-        }}
-      >
+      <div style={{ transform: `scale(${scale * pulse})`, opacity }}>
         <SeouliFace size={260} />
       </div>
       <div
